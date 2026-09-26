@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AUREVIA — Distributed Object Storage</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand"><div class="brand-mark">A</div><div><div class="brand">AUREVIA</div><div class="brand-sub">Private File Vault</div></div></div>
+    <div class="eyebrow">PRIVATE ACCESS</div>
+    <h1 id="authTitle">Sign in to AUREVIA</h1>
+    <p class="muted">Your files stay on this laptop. Sign in to keep this vault private.</p>
+    <form id="authForm">
+      <label class="field">Gmail / Email<input id="authEmail" type="email" placeholder="you@gmail.com" required></label>
+      <label class="field">Password<input id="authPassword" type="password" placeholder="At least 6 characters" minlength="6" required></label>
+      <button class="primary auth-submit" type="submit" id="authSubmit">Sign In</button>
+    </form>
+    <div class="auth-divider"><span>OR</span></div>
+    <button class="google-btn" id="googleBtn" type="button" onclick="googleSignIn()">Continue with Google</button>
+    <div id="authMessage" class="message"></div>
+    <button class="auth-switch" id="authSwitch" type="button" onclick="toggleAuthMode()">New here? Create an account</button>
+  </div>
+</div>
+<div id="appShell" class="app-shell hidden">
+<header class="header">
+  <div class="brand-wrap">
+    <div class="brand-mark">V</div>
+    <div>
+      <div class="brand">AUREVIA</div>
+      <div class="brand-sub">Distributed Object Storage</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="user-pill" id="userPill">Private</div><button class="soft logout-btn" onclick="logout()">Sign out</button>
+    <div class="system-pill"><i></i><span id="systemText">System Online</span></div>
+    <button class="icon-btn" onclick="refreshAll()" title="Refresh">↻</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <button class="nav active" data-tab="overview" onclick="showTab('overview')">⌂ <span>Overview</span></button>
+    <button class="nav" data-tab="objects" onclick="showTab('objects')">▣ <span>Objects</span></button>
+    <button class="nav" data-tab="nodes" onclick="showTab('nodes')">◈ <span>Storage Nodes</span></button>
+    <button class="nav" data-tab="activity" onclick="showTab('activity')">◷ <span>Activity</span></button>
+    <div class="side-bottom">
+      <div class="hack-badge">HACKATHON BUILD<br><b>Fault-Tolerant Storage</b></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section id="overview" class="tab active-tab">
+      <div class="page-title">
+        <div>
+          <div class="eyebrow">FAULT-TOLERANT STORAGE</div>
+          <h1>Store once. <span>Survive failures.</span></h1>
+          <p>Upload data, replicate it across independent nodes, verify integrity and automatically repair missing replicas.</p>
+        </div>
+        <button class="primary big" onclick="openUpload()">＋ Upload Object</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Objects</div><div class="stat-value" id="statObjects">0</div><div class="stat-note">Stored objects</div></div>
+        <div class="stat-card"><div class="stat-label">Logical Data</div><div class="stat-value" id="statLogical">0 B</div><div class="stat-note">Original data</div></div>
+        <div class="stat-card"><div class="stat-label">Physical Data</div><div class="stat-value" id="statPhysical">0 B</div><div class="stat-note">Across replicas</div></div>
+        <div class="stat-card"><div class="stat-label">Healthy Nodes</div><div class="stat-value" id="statNodes">0/4</div><div class="stat-note">Available storage</div></div>
+      </div>
+
+      <div class="two-col">
+        <section class="card">
+          <div class="card-head"><div><h2>Storage Health</h2><p>Live node availability and utilization</p></div><button class="soft" onclick="showTab('nodes')">Manage nodes</button></div>
+          <div id="healthPreview"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-head"><div><h2>Quick Demo</h2><p>Show the fault-tolerance workflow</p></div></div>
+          <div class="demo-flow">
+            <div><b>1</b><span>Upload</span></div><em>→</em>
+            <div><b>2</b><span>Replicate</span></div><em>→</em>
+            <div><b>3</b><span>Fail node</span></div><em>→</em>
+            <div><b>4</b><span>Repair</span></div>
+          </div>
+          <button class="demo-btn" onclick="runDemo()">Run repair cycle</button>
+          <div id="demoMessage" class="message"></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="card-head"><div><h2>Recent Objects</h2><p>Integrity-aware object inventory</p></div><button class="soft" onclick="showTab('objects')">View all</button></div>
+        <div id="recentObjects"></div>
+      </section>
+    </section>
+
+    <section id="objects" class="tab">
+      <div class="section-head"><div><div class="eyebrow">OBJECT CATALOG</div><h1>Objects</h1><p>Every object is tracked with checksum, replicas and durability state.</p></div><button class="primary big" onclick="openUpload()">＋ Upload Object</button></div>
+      <section class="card"><div id="allObjects"></div></section>
+    </section>
+
+    <section id="nodes" class="tab">
+      <div class="section-head"><div><div class="eyebrow">INFRASTRUCTURE</div><h1>Storage Nodes</h1><p>Simulate independent failures and observe automatic recovery.</p></div><div class="actions"><button class="soft" onclick="repairAll()">Repair all</button><button class="soft danger-text" onclick="resetDemo()">Reset demo</button></div></div>
+      <div id="nodeGrid" class="node-grid"></div>
+    </section>
+
+    <section id="activity" class="tab">
+      <div class="section-head"><div><div class="eyebrow">SYSTEM LOG</div><h1>Activity</h1><p>Operational events generated by the storage engine.</p></div></div>
+      <section class="card"><div id="events"></div></section>
+    </section>
+  </main>
+</div>
+
+<div id="uploadModal" class="modal hidden">
+  <div class="modal-box">
+    <button class="close" onclick="closeUpload()">×</button>
+    <div class="eyebrow">NEW OBJECT</div>
+    <h2>Upload to AUREVIA</h2>
+    <p class="muted">Choose a file and define how many independent replicas should exist.</p>
+    <input id="fileInput" type="file" hidden>
+    <div id="dropZone" class="drop-zone" onclick="document.getElementById('fileInput').click()">
+      <div class="drop-icon">↑</div><b id="dropTitle">Choose a file</b><span id="dropHint">Any file type • drag & drop supported</span>
+    </div>
+    <label class="field">Replication factor
+      <select id="replication"><option>1</option><option>2</option><option selected>3</option><option>4</option></select>
+    </label>
+    <button class="primary upload-action" onclick="uploadFile()">Upload & Replicate</button>
+    <div id="uploadMessage" class="message"></div>
+    <div class="message">Local copy: <b>Downloads → Aurevia Files</b></div>
+  </div>
+</div>
+
+</div>
+<div id="toast" class="toast"></div>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
